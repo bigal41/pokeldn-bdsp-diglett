@@ -1,0 +1,7 @@
+id = "bdsp-diglett"
+name = "BDSP — Diglett"
+version = "0.4.0"
+author = "Allan"
+api = "1.8"
+description = "Activate the 40-point Diglett bonus, renew it automatically, or add a custom number of points."
+module = "plugin"
