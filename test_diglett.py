@@ -85,7 +85,7 @@ def test_observation_never_enables_increment_and_point_mode_requires_ug_scene():
     transport = load('test_diglett_options', ROOT/'bdsp_connect.py')
     for action, points in [('observe', 0), ('custom', 1)]:
         args = transport.build_parser().parse_args(service.arguments(action, 90, 'keys', 'capture'))
-        assert args.expected_scene == 0x3120 and args.ug_join
+        assert args.expected_scene == (0x3110, 0x3120, 0x3140) and args.ug_join
         assert args.diglett_points == points
         assert not args.room_walk_steps
         assert not args.complete_trade and not args.inject_file
@@ -118,7 +118,7 @@ def test_activation_has_bounded_budget_fresh_identity_and_no_wall_offset():
     args = transport.build_parser().parse_args(service.arguments('activate', 90, 'keys', 'capture'))
     assert args.diglett_fill_from is None and args.diglett_points == 40
     assert args.join_offset_x == args.join_offset_z == 0
-    assert args.expected_scene == 0x3120
+    assert args.expected_scene == (0x3110, 0x3120, 0x3140)
     assert 0 < args.src_var < 0xffffffff
 
 def test_renewal_uses_40_and_stops_after_ambiguous_delivery():
@@ -141,5 +141,5 @@ def test_renewal_options_keep_exact_scene_and_exclude_other_modes():
     transport = load('test_renew_options', ROOT/'bdsp_connect.py')
     args = transport.build_parser().parse_args(service.arguments('renew', 3600, 'keys', 'capture'))
     assert args.diglett_renew and args.diglett_points == 0 and args.diglett_fill_from is None
-    assert args.expected_scene == 0x3120 and args.hold == 3600
+    assert args.expected_scene == (0x3110, 0x3120, 0x3140) and args.hold == 3600
 

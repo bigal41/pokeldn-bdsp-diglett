@@ -134,11 +134,18 @@ async def main_async(args):
                           channels=[int(c) for c in args.channels.split(",")],
                           dwell_time=args.dwell)
     want = int(args.comm_id, 16) if args.comm_id else COMM_ID
-    expected_scene = getattr(args, "expected_scene", None)
+    expected_scenes = getattr(args, "expected_scene", None)
+    for n in nets:
+        print(f"[cx] scan saw ssid={n.ssid.hex()} ch={n.channel} comm_id={n.local_communication_id:#018x} "
+              f"scene={n.scene_id:#06x} app_version={n.app_version}")
+    if not nets:
+        print("[cx] scan saw no LDN networks on channels " + args.channels)
     net = next((n for n in nets if n.local_communication_id == want
-                and (expected_scene is None or n.scene_id == expected_scene)), None)
+                and (expected_scenes is None or n.scene_id in expected_scenes)), None)
     if net is None:
         print("[cx] target network not seen - is the console sitting in the room right now?")
+        if expected_scenes is not None:
+            print("[cx] wanted scene " + ", ".join(f"{s:#06x}" for s in expected_scenes))
         return 3
     keys = session_keys(net)
     print(f"[cx] target ssid={net.ssid.hex()} ch={net.channel} app_version={net.app_version}")
@@ -1672,8 +1679,9 @@ def build_parser():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--comm-id", default=None)
-    ap.add_argument("--expected-scene", type=lambda s: int(s, 0), default=None,
-                    help="only select a network advertising this scene ID")
+    ap.add_argument("--expected-scene", type=lambda s: tuple(int(x, 0) for x in s.split(",")),
+                    default=None, help="only select a network advertising one of these scene IDs "
+                                       "(comma-separated)")
     ap.add_argument("--diglett-points", type=int, choices=range(41), default=0,
                     help="experimental: send ONE Diglett increment after Underground join ACK")
     ap.add_argument("--diglett-fill-from", type=int, choices=range(40), default=None,
@@ -1908,8 +1916,9 @@ def main():
     if not board_radio() and getattr(os, "geteuid", lambda: -1)() != 0:
         ap.error("must run as root")
     diglett_active = args.diglett_points or args.diglett_fill_from is not None or args.diglett_renew
-    if diglett_active and (not args.ug_join or args.expected_scene not in (0x3120, 0x3140)):
-        ap.error("Diglett needs --ug-join and --expected-scene 0x3120 or 0x3140")
+    if diglett_active and (not args.ug_join or not args.expected_scene
+                           or any(s not in (0x3110, 0x3120, 0x3140) for s in args.expected_scene)):
+        ap.error("Diglett needs --ug-join and --expected-scene from 0x3110, 0x3120, 0x3140")
     if sum((bool(args.diglett_points), args.diglett_fill_from is not None, args.diglett_renew)) > 1:
         ap.error("choose a single increment, one fill cycle or renewal")
     if diglett_active and (args.inject_file or args.pre_request or args.answer_with):

@@ -42,10 +42,10 @@ def arguments(action, seconds, keys, capture, points=1):
     if action not in ('activate', 'renew', 'observe', 'custom'): raise ValueError('Invalid action')
     if not 30 <= seconds <= 86400: raise ValueError('Running time must be 30 to 86400 seconds')
     if not 1 <= points <= 40: raise ValueError('Points must be between 1 and 40')
-    result = ['--keys', str(keys), '--expected-scene', '0x3120',
+    result = ['--keys', str(keys), '--expected-scene', '0x3110,0x3120,0x3140',
             '--src-var', hex(secrets.randbelow(0xfffffffe) + 1),
             '--name', 'Diglett', '--hold', str(seconds), '--channels', '1,6,11',
-            '--connect', '3', '--join', '4', '--reliable-ack', '--answer-requests',
+            '--count', '9', '--connect', '3', '--join', '4', '--reliable-ack', '--answer-requests',
             '--ug-join', '--room-walk-steps', '0', '--join-offset-x', '0',
             '--join-offset-z', '0', '--capture', str(capture),
             '--diglett-points', str({'activate': 40, 'custom': points}.get(action, 0))]
@@ -75,7 +75,7 @@ def main(argv=None):
         print(json.dumps(dict(action=args.action, seconds=args.seconds,
                               max_increment_datagrams=None if args.action == 'renew' else int(args.action != 'observe'),
                               requested_points=args.points if args.action == 'custom' else None,
-                              expected_scene='0x3120', console_tested=False)))
+                              expected_scene='0x3110,0x3120,0x3140', console_tested=False)))
         return 0
     keys = args.keys
     if not keys:
